@@ -25,23 +25,27 @@ namespace SimpleNums
     {
         private int h = 0;
         private int limit;
+        private int lenNumberInText; //количество символов, которое будет занимать одно число, включая пробелы
+        private int countNumbersInLast; //максимальное количество цифр в последней строке пирамиды
+        private int maxSymbols;
         private bool[] isSimple;
 
         public MainWindow()
         {
             InitializeComponent();
+            //M();
         }
 
         private void GeneratePiramid_Click(object sender, RoutedEventArgs e)
         {
-            limit = 0;
+            InitialValues();
             FindSimpleNums();
-            GenerateNumberTable();
+            GenerateNumberTable2();
         }
 
         private void FindSimpleNums()
         {
-            limit = h * h;
+            
             isSimple = new bool[limit + 1];
             int sqrt = (int)Math.Sqrt(limit);
             for (int i = 0; i < limit; i++)
@@ -98,42 +102,128 @@ namespace SimpleNums
             }
         }
 
-        private void GenerateNumberTable()
-        {
-            canvas.Children.Clear();
-            int lenMax = limit - (h - 1) * (h - 1); //количество колонок
 
-            int gridWidth = lenMax * 35;
-            int gridHeight = h * 21;
+        //private void GenerateNumberTable()
+        //{
+        //    canvas.Children.Clear();
+        //    int gridWidth = countNumbersInLast * 35;
+        //    int gridHeight = h * 21;
+        //    int elemsCount = 1;
+        //    int simpleCounter = 1;
+        //    int beginX = gridWidth / 2 - 15;
+        //    int currentY = 0;
+        //    for (int j = 0; j < h; j++)
+        //    {
+        //        int currentX = beginX;
+        //        for (int i = 0; i < elemsCount; i++)
+        //        {
+        //            var tb = new TextBlock();
+        //            tb.Text = simpleCounter.ToString();
+        //            tb.RenderTransform = new TranslateTransform { X = currentX, Y = currentY };
+        //            if (isSimple[simpleCounter])
+        //                tb.Background = new SolidColorBrush(Color.FromArgb(80, 255, 255, 0));
+        //            canvas.Children.Add(tb);
+        //            tb.Width = 30;
+        //            tb.Height = 20;
+        //            currentX += 30;
+
+        //            simpleCounter++;
+        //        }
+        //        currentY += 20;
+        //        elemsCount += 2;
+        //        beginX = beginX - 30;
+        //    }
+
+        //    canvas.Background = new SolidColorBrush(Color.FromArgb(50, 50, 100, 150));
+        //    canvas.Width = gridWidth;
+        //    canvas.Height = gridHeight;
+        //}
+
+        public void GenerateNumberTable2()
+        {
+            //1 подобрать размеры окна
+            //2 создать textBlock
+            //создать два Run'ера. один для составного числа, один - для простого
+            //Добавлять Run с разными text
+            //canvas.Children.Clear();
+            textBlock.Text = "";
+            //var textBlock = new TextBlock();
+            ScrollViewer sc = new ScrollViewer();
+            sc.Content = textBlock;
+            textBlock.FontFamily = new FontFamily("Courier New");
             int elemsCount = 1;
             int simpleCounter = 1;
-            int beginX = gridWidth / 2 - 15;
-            int currentY = 0;
+            var sb = new StringBuilder();
+            var lastIsSimple = false;
+
             for (int j = 0; j < h; j++)
             {
-                int currentX = beginX;
+                
+                sb.AppendSpaces(FindSpacesCount(elemsCount));
                 for (int i = 0; i < elemsCount; i++)
                 {
-                    var tb = new TextBlock();
-                    tb.Text = simpleCounter.ToString();  
-                    tb.RenderTransform = new TranslateTransform { X = currentX, Y = currentY};
-                    if(isSimple[simpleCounter])
-                        tb.Background = new SolidColorBrush(Color.FromArgb(80, 255, 255, 0));
-                    canvas.Children.Add(tb);
-                    tb.Width = 30;
-                    tb.Height = 20;
-                    currentX += 30;
+                    if (isSimple[simpleCounter])
+                    {
+                        if (!lastIsSimple)
+                        {
+                            textBlock.Inlines.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                        lastIsSimple = true;
+                    }
+                    else
+                    {
+                        if (lastIsSimple)
+                        {
+                            var run = new Run(sb.ToString());
+                            run.Background = Brushes.Yellow;
+                            textBlock.Inlines.Add(run);
+                            sb.Clear();
+                        }
+                        lastIsSimple = false;
+
+                    }
+                    sb.AppendWithSpaces(simpleCounter, lenNumberInText);
+                    
                     
                     simpleCounter++;
                 }
-                currentY += 20;
-                elemsCount += 2;
-                beginX = beginX - 30;
-            }
+                if (sb != null)
+                {
+                    textBlock.Inlines.Add(sb.ToString());
+                    sb.Clear();
+                }
 
-            canvas.Background = new SolidColorBrush(Color.FromArgb(50, 50, 100, 150));
-            canvas.Width = gridWidth;
-            canvas.Height = gridHeight;
+                
+
+                
+                //sb.AppendSpaces(endSpace);
+                textBlock.Inlines.Add(Environment.NewLine);
+                
+                elemsCount += 2;
+                
+            }
+            //canvas.Children.Add(textBlock);
+            //grid.Children.Add(textBlock);
+            textBlock.Width = countNumbersInLast * lenNumberInText * 10;
+            textBlock.Height = h * 22;
+        }
+
+
+
+        private int FindSpacesCount(int currentCountOfNumbers)
+        { 
+            int spaces = maxSymbols - (currentCountOfNumbers * lenNumberInText) - (currentCountOfNumbers - 1);
+            var startLine = spaces / 2;
+            return startLine;
+        }
+
+        private void InitialValues()
+        {
+            limit = h * h;
+            lenNumberInText = Nums.GetDigitNumber(limit);
+            countNumbersInLast = limit - (h - 1) * (h - 1);
+            maxSymbols = countNumbersInLast * lenNumberInText + (countNumbersInLast - 1);
         }
 
         private void PiramidHeight_TextChanged(object sender, TextChangedEventArgs e)
@@ -151,6 +241,25 @@ namespace SimpleNums
             else
             {
                 GeneratePiramid.IsEnabled = true;
+            }
+        }
+    }
+
+    public static class StringBuilderExtensions
+    {
+        public static void AppendWithSpaces(this StringBuilder text, int value, int lengthText)
+        {
+            int lost = lengthText - Nums.GetDigitNumber(value);
+            AppendSpaces(text, lost);
+            text.Append(value);
+            text.Append(" ");
+        }
+
+        public static void AppendSpaces(this StringBuilder text, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                text.Append(" ");
             }
         }
     }
