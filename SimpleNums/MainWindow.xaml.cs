@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+
 
 namespace SimpleNums
 {
@@ -33,19 +36,72 @@ namespace SimpleNums
         public MainWindow()
         {
             InitializeComponent();
-            //M();
+        }
+
+        private void M(int h)
+        {
+            RectangleDrawer dr = new RectangleDrawer();
+            dr.DrawRectangle(16, h, canvas);
+            dr.DrawRectangleWithPosition(0, 0, Colors.Pink, canvas);
+            dr.DrawRectangleWithPosition(0, 15, Colors.Green, canvas);
+
+        }
+
+        private void DrawPiramid(int h)
+        {
+            var p = new PiramidOfPrimes(h);
+            canvas.Children.Add(new VisualHost(p));
+            SetSize(p);
+        }
+
+        private void SetSize(PiramidOfPrimes p)
+        {
+            int MAX_WIDTH = 1200;
+            int MAX_HEIGHT = 600;
+            var size = p.GetSize();
+            if (size.Width < MAX_WIDTH)
+            {
+                grid.Width = size.Width;
+                canvas.Width = size.Width;
+                this.Width = size.Width + 20;
+            }
+            else
+            {
+                grid.Width = size.Width;
+                canvas.Width = size.Width;
+                this.Width = MAX_WIDTH + 70;
+            }
+            if (size.Height < MAX_HEIGHT)
+            {
+                grid.Height = size.Height;
+                canvas.Height = size.Height;
+                this.Height = size.Height + 100;
+            }
+            else
+            {
+                grid.Height = size.Height;
+                canvas.Height = size.Height;
+                this.Height = MAX_HEIGHT + 100;
+            }
         }
 
         private void GeneratePiramid_Click(object sender, RoutedEventArgs e)
         {
+            canvas.Children.Clear();
+            //grid.Children.Clear();
+            var sw = Stopwatch.StartNew();
             InitialValues();
             FindSimpleNums();
-            GenerateNumberTable2();
+            DrawPiramid(h);
+            M(h);
+            //GenerateNumberTable2();
+            this.Title = sw.ElapsedMilliseconds + "ms";
+            //MessageBox.Show("the end");
         }
 
         private void FindSimpleNums()
         {
-            
+
             isSimple = new bool[limit + 1];
             int sqrt = (int)Math.Sqrt(limit);
             for (int i = 0; i < limit; i++)
@@ -139,84 +195,67 @@ namespace SimpleNums
         //    canvas.Height = gridHeight;
         //}
 
-        public void GenerateNumberTable2()
-        {
-            //1 подобрать размеры окна
-            //2 создать textBlock
-            //создать два Run'ера. один для составного числа, один - для простого
-            //Добавлять Run с разными text
-            //canvas.Children.Clear();
-            textBlock.Text = "";
-            //var textBlock = new TextBlock();
-            ScrollViewer sc = new ScrollViewer();
-            sc.Content = textBlock;
-            textBlock.FontFamily = new FontFamily("Courier New");
-            int elemsCount = 1;
-            int simpleCounter = 1;
-            var sb = new StringBuilder();
-            var lastIsSimple = false;
+        //public void GenerateNumberTable2()
+        //{
+        //    textBlock.Text = "";
+        //    //ScrollViewer sc = new ScrollViewer();
+        //    //sc.Content = textBlock;
+        //    textBlock.FontFamily = new FontFamily("Courier New");
+        //    int elemsCount = 1;
+        //    int simpleCounter = 1;
+        //    var sb = new StringBuilder();
+        //    var lastIsSimple = false;
 
-            for (int j = 0; j < h; j++)
-            {
-                
-                sb.AppendSpaces(FindSpacesCount(elemsCount));
-                for (int i = 0; i < elemsCount; i++)
-                {
-                    if (isSimple[simpleCounter])
-                    {
-                        if (!lastIsSimple)
-                        {
-                            textBlock.Inlines.Add(sb.ToString());
-                            sb.Clear();
-                        }
-                        lastIsSimple = true;
-                    }
-                    else
-                    {
-                        if (lastIsSimple)
-                        {
-                            var run = new Run(sb.ToString());
-                            run.Background = Brushes.Yellow;
-                            textBlock.Inlines.Add(run);
-                            sb.Clear();
-                        }
-                        lastIsSimple = false;
+        //    for (int j = 0; j < h; j++)
+        //    {
+        //        sb.AppendSpaces(FindSpacesCount(elemsCount));
+        //        for (int i = 0; i < elemsCount; i++)
+        //        {
+        //            if (isSimple[simpleCounter])
+        //            {
+        //                if (!lastIsSimple)
+        //                {
+        //                    textBlock.Inlines.Add(sb.ToString());
+        //                    //Strings.Add(sb.ToString());
+        //                    sb.Clear();
+        //                }
+        //                lastIsSimple = true;
+        //            }
+        //            else
+        //            {
+        //                if (lastIsSimple)
+        //                {
+        //                    var run = new Run(sb.ToString());
+        //                    run.Background = Brushes.Yellow;
+        //                    textBlock.Inlines.Add(run);
+        //                    sb.Clear();
+        //                }
+        //                lastIsSimple = false;
 
-                    }
-                    sb.AppendWithSpaces(simpleCounter, lenNumberInText);
-                    
-                    
-                    simpleCounter++;
-                }
-                if (sb != null)
-                {
-                    textBlock.Inlines.Add(sb.ToString());
-                    sb.Clear();
-                }
+        //            }
+        //            sb.AppendWithSpaces(simpleCounter, lenNumberInText);
+        //            simpleCounter++;
+        //        }
+        //        if (sb != null)
+        //        {
+        //            textBlock.Inlines.Add(sb.ToString());
+        //            sb.Clear();
+        //        }
+        //        textBlock.Inlines.Add(Environment.NewLine);
 
-                
+        //        elemsCount += 2;
 
-                
-                //sb.AppendSpaces(endSpace);
-                textBlock.Inlines.Add(Environment.NewLine);
-                
-                elemsCount += 2;
-                
-            }
-            //canvas.Children.Add(textBlock);
-            //grid.Children.Add(textBlock);
-            textBlock.Width = countNumbersInLast * lenNumberInText * 10;
-            textBlock.Height = h * 22;
-        }
+        //    }
+        //    //canvas.Children.Add(textBlock);
+        //    //grid.Children.Add(textBlock);
+        //    textBlock.Width = countNumbersInLast * lenNumberInText * 10 + 50;
+        //    textBlock.Height = h * 22;
+        //    grid.Width = countNumbersInLast * lenNumberInText * 10 + 50;
+        //    grid.Height = h * 22;
+
+        //}
 
 
-
-        private int FindSpacesCount(int currentCountOfNumbers)
-        { 
-            int spaces = maxSymbols - (currentCountOfNumbers * lenNumberInText) - (currentCountOfNumbers - 1);
-            var startLine = spaces / 2;
-            return startLine;
-        }
 
         private void InitialValues()
         {
@@ -245,22 +284,5 @@ namespace SimpleNums
         }
     }
 
-    public static class StringBuilderExtensions
-    {
-        public static void AppendWithSpaces(this StringBuilder text, int value, int lengthText)
-        {
-            int lost = lengthText - Nums.GetDigitNumber(value);
-            AppendSpaces(text, lost);
-            text.Append(value);
-            text.Append(" ");
-        }
 
-        public static void AppendSpaces(this StringBuilder text, int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                text.Append(" ");
-            }
-        }
-    }
 }
